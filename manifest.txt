@@ -1,0 +1,9 @@
+Проект: DebtLoop
+Автор: @alexanderkletsov
+GitHub: AlexKlet777
+Дата фиксации: 2025-04-23 07:16:37
+
+Состав архива:
+- README.md
+- main.py
+- Investor_Pitch_AutoDebtBot.pdf
