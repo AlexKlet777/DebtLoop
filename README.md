@@ -1,5 +1,13 @@
 # DebtLoop — Telegram-бот для взаимозачёта долгов
 
+## Website / Сайт проекта
+
+[English — project overview & acquisition](https://debtloop.aleksander777.chatgpt.site/)
+
+[Русский — о проекте и приобретении](https://debtloop.aleksander777.chatgpt.site/ru/)
+
+**Acquisition enquiries / Обсудить приобретение:** [@alexanderkletsov](https://t.me/alexanderkletsov)
+
 **Автор:** [@alexanderkletsov](https://t.me/alexanderkletsov)  
 **GitHub:** [AlexKlet777](https://github.com/AlexKlet777)  
 **Дата фиксации:** 2025-04-23 07:16:37
