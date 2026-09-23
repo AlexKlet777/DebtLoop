@@ -1,5 +1,7 @@
 # DebtLoop
 
+**Live interactive demo:** https://alexklet777.github.io/DebtLoop/
+
 **B2B FinTech infrastructure for circular-debt detection and multilateral netting.**
 
 DebtLoop identifies closed chains of obligations between companies and calculates how much debt can be offset without requiring each participant to move the full gross amount of cash.
@@ -102,6 +104,16 @@ The intended product is a B2B platform, not merely a Telegram bot. The Telegram 
 6. ERP/accounting integrations and APIs;
 7. jurisdiction-specific legal and compliance workflows;
 8. analytics showing liquidity unlocked and obligations reduced.
+
+## Qatar START readiness
+
+DebtLoop is being prepared for the Startup Qatar Investment Program (START track). Current work focuses on the areas QDB explicitly expects at START stage: a validated concept, clear technology roadmap, market research, business model and monetization strategy, an execution plan, and a committed leadership team.
+
+See:
+
+- `QATAR_START_APPLICATION.md` — application draft;
+- `QATAR_VALIDATION_PACKAGE.md` — evidence and validation plan;
+- `MVP_TEST_PLAN.md` — technical PoC validation.
 
 ## Qatar / GCC thesis
 
