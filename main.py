@@ -5,6 +5,7 @@ import os
 import time
 import logging
 from dotenv import load_dotenv
+from netting import find_debt_cycle, calculate_cycle_netting
 
 load_dotenv()
 TOKEN = os.getenv("TOKEN")
@@ -27,38 +28,6 @@ def save_debts():
         json.dump(debts, f, ensure_ascii=False, indent=2)
 
 
-def find_debt_cycle(active_debts):
-    graph = {}
-
-    for debt in active_debts:
-        graph.setdefault(debt["from"], []).append(debt)
-
-    def search(current, path_nodes, path_debts):
-        for debt in graph.get(current, []):
-            next_user = debt["to"]
-
-            if next_user in path_nodes:
-                cycle_start = path_nodes.index(next_user)
-                return path_debts[cycle_start:] + [debt]
-
-            if len(path_nodes) < len(graph) + 1:
-                result = search(
-                    next_user,
-                    path_nodes + [next_user],
-                    path_debts + [debt]
-                )
-
-                if result:
-                    return result
-
-        return None
-
-    for start_user in graph:
-        result = search(start_user, [start_user], [])
-        if result:
-            return result
-
-    return None
 
 def get_user_name(user):
     return user.username if user.username else f"{user.first_name}"
@@ -72,6 +41,7 @@ def send_welcome(message):
         types.KeyboardButton("/debts"),
         types.KeyboardButton("/credits"),
         types.KeyboardButton("/netting"),
+        types.KeyboardButton("/demo"),
         types.KeyboardButton("/help")
     )
     bot.send_message(message.chat.id, "Привет! Я бот для учёта долгов. Используй кнопки ниже или команды.", reply_markup=markup)
@@ -88,6 +58,7 @@ def show_help(message):
 /debts — список долгов, которые ты должен
 /credits — список долгов, которые должны тебе
 /netting — найти круговой долг и рассчитать взаимозачёт
+/demo — показать демонстрационный B2B-сценарий A → B → C → A
 /help — показать это сообщение
 """
     bot.send_message(message.chat.id, help_text)
@@ -193,10 +164,7 @@ def show_netting_opportunity(message):
         )
         return
 
-    netting_amount = min(d["amount"] for d in cycle)
-
-    total_before = sum(d["amount"] for d in cycle)
-    total_after = total_before - netting_amount * len(cycle)
+    result = calculate_cycle_netting(cycle)
 
     msg = "🔄 Circular debt detected\n\n"
 
@@ -204,17 +172,52 @@ def show_netting_opportunity(message):
     for d in cycle:
         msg += f'{d["from"]} → {d["to"]}: ${d["amount"]:,}\n'
 
-    msg += f"\nMaximum netting per link: ${netting_amount:,}\n\n"
+    msg += (
+        f"\nMaximum netting per link: "
+        f'${result["netting_amount_per_link"]:,}\n\n'
+    )
 
     msg += "AFTER NETTING:\n"
-    for d in cycle:
-        remaining = d["amount"] - netting_amount
-        msg += f'{d["from"]} → {d["to"]}: ${remaining:,}\n'
+    for d in result["residual_debts"]:
+        msg += f'{d["from"]} → {d["to"]}: ${d["after"]:,}\n'
 
     msg += (
-        f"\nGross obligations before: ${total_before:,}"
-        f"\nGross obligations after: ${total_after:,}"
-        f"\nDebt eliminated: ${total_before - total_after:,}"
+        f'\nGross obligations before: ${result["total_before"]:,}'
+        f'\nGross obligations after: ${result["total_after"]:,}'
+        f'\nDebt eliminated: ${result["debt_eliminated"]:,}'
+    )
+
+    bot.send_message(message.chat.id, msg)
+
+
+@bot.message_handler(commands=["demo"])
+def show_demo(message):
+    demo_debts = [
+        {"from": "Company A", "to": "Company B", "amount": 100000},
+        {"from": "Company B", "to": "Company C", "amount": 80000},
+        {"from": "Company C", "to": "Company A", "amount": 70000},
+    ]
+
+    cycle = find_debt_cycle(demo_debts)
+    result = calculate_cycle_netting(cycle)
+
+    msg = (
+        "DEBTLOOP B2B DEMO\n\n"
+        "Circular obligations detected:\n"
+        "Company A → Company B: $100,000\n"
+        "Company B → Company C: $80,000\n"
+        "Company C → Company A: $70,000\n\n"
+        f'Maximum multilateral netting: ${result["netting_amount_per_link"]:,} per link\n\n'
+        "Residual obligations:\n"
+    )
+
+    for debt in result["residual_debts"]:
+        msg += f'{debt["from"]} → {debt["to"]}: ${debt["after"]:,}\n'
+
+    msg += (
+        f'\nGross obligations before: ${result["total_before"]:,}'
+        f'\nGross obligations after: ${result["total_after"]:,}'
+        f'\nDebt eliminated: ${result["debt_eliminated"]:,}'
     )
 
     bot.send_message(message.chat.id, msg)
