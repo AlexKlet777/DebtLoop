@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>DebtLoop — Circular Debt Netting Demo</title>
+  <meta name="description" content="Interactive proof of concept for circular debt detection and multilateral netting." />
+  <style>
+    :root{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#111827;background:#f3f4f6}
+    *{box-sizing:border-box}
+    body{margin:0}
+    .wrap{max-width:1050px;margin:auto;padding:40px 20px 64px}
+    .hero{background:#111827;color:white;border-radius:24px;padding:32px;margin-bottom:24px}
+    .hero h1{font-size:42px;margin:0 0 12px}.hero p{font-size:18px;line-height:1.55;max-width:780px;color:#d1d5db}
+    .badge{display:inline-block;padding:7px 11px;border:1px solid #374151;border-radius:999px;margin-bottom:16px;color:#a7f3d0}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+    .card{background:white;border-radius:20px;padding:24px;box-shadow:0 8px 24px rgba(0,0,0,.05)}
+    h2{margin-top:0;font-size:22px}
+    label{display:block;font-size:13px;color:#4b5563;margin-bottom:6px}
+    .row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;align-items:end;margin-bottom:12px}
+    input{width:100%;padding:12px;border:1px solid #d1d5db;border-radius:10px;font-size:15px}
+    button{border:0;border-radius:12px;padding:13px 18px;font-weight:700;font-size:15px;cursor:pointer}
+    .primary{background:#111827;color:white}.secondary{background:#e5e7eb;color:#111827}
+    .actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+    .metric{padding:15px;border-radius:14px;background:#f9fafb;margin-bottom:10px}
+    .metric strong{display:block;font-size:24px;margin-top:4px}
+    .good{background:#ecfdf5}.warn{background:#fffbeb}
+    table{width:100%;border-collapse:collapse;margin-top:12px}
+    th,td{text-align:left;padding:10px;border-bottom:1px solid #e5e7eb}
+    .footer{color:#6b7280;font-size:13px;line-height:1.5;margin-top:22px}
+    .error{color:#b91c1c;font-weight:600;margin-top:12px}
+    @media(max-width:760px){.grid{grid-template-columns:1fr}.row{grid-template-columns:1fr}.hero h1{font-size:32px}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <section class="hero">
+    <div class="badge">Proof of Concept</div>
+    <h1>DebtLoop</h1>
+    <p>B2B infrastructure for detecting circular obligations and calculating multilateral netting opportunities. The demo shows how a closed chain of debt can be reduced without adding new borrowing.</p>
+  </section>
+
+  <div class="grid">
+    <section class="card">
+      <h2>1. Enter obligations</h2>
+      <div id="rows"></div>
+      <div class="actions">
+        <button class="secondary" id="add">+ Add obligation</button>
+        <button class="secondary" id="example">Load example</button>
+        <button class="primary" id="calculate">Detect & calculate</button>
+      </div>
+      <div id="error" class="error"></div>
+    </section>
+
+    <section class="card">
+      <h2>2. Netting result</h2>
+      <div class="metric"><span>Gross obligations before</span><strong id="before">$0</strong></div>
+      <div class="metric good"><span>Gross obligations after</span><strong id="after">$0</strong></div>
+      <div class="metric good"><span>Gross debt eliminated</span><strong id="eliminated">$0</strong></div>
+      <div class="metric warn"><span>Maximum netting per link</span><strong id="perlink">$0</strong></div>
+      <div id="cycle"></div>
+    </section>
+  </div>
+
+  <section class="card" style="margin-top:20px">
+    <h2>What the PoC demonstrates</h2>
+    <p>DebtLoop models confirmed obligations as a directed graph, detects a circular chain, and calculates the maximum equal offset that can be applied around that cycle. The current PoC produces a netting proposal only.</p>
+    <p class="footer">This demo does not move funds, execute legal settlement, or replace accounting systems. Commercial deployment requires jurisdiction-specific legal, accounting, data-protection and security validation.</p>
+  </section>
+</div>
+
+<script>
+const rowsEl=document.getElementById('rows');
+const money=n=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(n);
+
+function addRow(from='',to='',amount=''){
+  const row=document.createElement('div');
+  row.className='row';
+  row.innerHTML=`
+    <div><label>Debtor</label><input class="from" value="${from}" placeholder="Company A"></div>
+    <div><label>Creditor</label><input class="to" value="${to}" placeholder="Company B"></div>
+    <div><label>Amount (USD)</label><input class="amount" value="${amount}" type="number" min="1" placeholder="100000"></div>`;
+  rowsEl.appendChild(row);
+}
+
+function loadExample(){
+  rowsEl.innerHTML='';
+  addRow('Company A','Company B',100000);
+  addRow('Company B','Company C',80000);
+  addRow('Company C','Company A',70000);
+}
+
+function getDebts(){
+  return [...rowsEl.querySelectorAll('.row')].map(r=>({
+    from:r.querySelector('.from').value.trim(),
+    to:r.querySelector('.to').value.trim(),
+    amount:Number(r.querySelector('.amount').value)
+  })).filter(d=>d.from&&d.to&&d.amount>0);
+}
+
+function findCycle(debts){
+  const graph=new Map();
+  debts.forEach(d=>{
+    if(!graph.has(d.from)) graph.set(d.from,[]);
+    graph.get(d.from).push(d);
+  });
+
+  function search(current,nodes,path){
+    const edges=graph.get(current)||[];
+    for(const debt of edges){
+      const next=debt.to;
+      const idx=nodes.indexOf(next);
+      if(idx>=0) return path.slice(idx).concat([debt]);
+      if(nodes.length<=graph.size+1){
+        const found=search(next,nodes.concat([next]),path.concat([debt]));
+        if(found) return found;
+      }
+    }
+    return null;
+  }
+
+  for(const start of graph.keys()){
+    const found=search(start,[start],[]);
+    if(found) return found;
+  }
+  return null;
+}
+
+function calculate(){
+  document.getElementById('error').textContent='';
+  const debts=getDebts();
+  if(debts.length<2){
+    document.getElementById('error').textContent='Add at least two valid obligations.';
+    return;
+  }
+  const cycle=findCycle(debts);
+  if(!cycle){
+    document.getElementById('error').textContent='No circular debt found in the entered obligations.';
+    ['before','after','eliminated','perlink'].forEach(id=>document.getElementById(id).textContent='$0');
+    document.getElementById('cycle').innerHTML='';
+    return;
+  }
+
+  const per=Math.min(...cycle.map(d=>d.amount));
+  const before=cycle.reduce((s,d)=>s+d.amount,0);
+  const residual=cycle.map(d=>({...d,after:d.amount-per}));
+  const after=residual.reduce((s,d)=>s+d.after,0);
+
+  document.getElementById('before').textContent=money(before);
+  document.getElementById('after').textContent=money(after);
+  document.getElementById('eliminated').textContent=money(before-after);
+  document.getElementById('perlink').textContent=money(per);
+
+  let html='<h3>Detected cycle</h3><table><thead><tr><th>Obligation</th><th>Before</th><th>After</th></tr></thead><tbody>';
+  residual.forEach(d=>{html+=`<tr><td>${d.from} → ${d.to}</td><td>${money(d.amount)}</td><td>${money(d.after)}</td></tr>`;});
+  html+='</tbody></table>';
+  document.getElementById('cycle').innerHTML=html;
+}
+
+document.getElementById('add').onclick=()=>addRow();
+document.getElementById('example').onclick=()=>{loadExample();calculate();};
+document.getElementById('calculate').onclick=calculate;
+loadExample();
+calculate();
+</script>
+</body>
+</html>
