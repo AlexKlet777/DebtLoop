@@ -15,6 +15,8 @@ Adjacent: **B2B SaaS**, **Supply Chain / Working Capital Technology**
 
 **DebtLoop is a B2B platform that detects circular obligations between companies and proposes multilateral netting, helping businesses reduce gross outstanding debt and unlock working capital without adding new borrowing.**
 
+**Live PoC:** https://alexklet777.github.io/DebtLoop/
+
 ## 4. Problem
 
 Businesses can be both debtors and creditors at the same time. In a network of companies, obligations may form circular chains. Each company may wait for incoming cash before paying the next company, leaving liquidity trapped even where part of the obligations can theoretically be offset.
@@ -176,3 +178,36 @@ The exact requested amount and budget should be finalized only after the 18–24
 ## 14. Core application message
 
 **DebtLoop does not create new credit. It helps businesses use the structure of existing obligations more efficiently. By detecting circular debt chains and coordinating multilateral netting, the platform can reduce gross outstanding obligations, improve settlement efficiency and potentially release working capital that would otherwise remain trapped inside payment chains.**
+
+
+## 15. QDB START criteria mapping
+
+This section maps the application directly to the current Startup Qatar START eligibility language.
+
+### Unmet market need
+DebtLoop addresses the working-capital friction created when businesses are simultaneously debtors and creditors and payment chains become circular.
+
+### Clear objective and execution plan
+The objective is to turn the working PoC into a production-grade B2B platform, validate legal/accounting treatment in Qatar, run controlled pilots, and scale to GCC markets.
+
+### Detailed technology roadmap
+The roadmap includes secure company accounts, obligation import, graph-processing services, approval workflows, audit trails, APIs, ERP/accounting integrations and multi-cycle optimization.
+
+### Validated concept
+A working public PoC already detects circular obligations and calculates netting outcomes. Commercial validation is still in progress and is explicitly tracked in QATAR_VALIDATION_PACKAGE.md.
+
+### Market readiness supported by research
+This remains the most important pre-submission gap. Structured interviews and pilot-interest evidence are required before final submission.
+
+### Robust business model and monetization strategy
+Current hypotheses include B2B SaaS, enterprise/API pricing, success-based fees and white-label/API licensing. The final model will be selected after customer validation.
+
+### Committed leadership with relevant experience
+Founder profile and technical-delivery structure are being prepared separately. The final application should distinguish current team members from planned hires or external partners.
+
+## 16. Evidence links
+
+- Live PoC: https://alexklet777.github.io/DebtLoop/
+- Source repository: https://github.com/AlexKlet777/DebtLoop
+- Technical validation: MVP_TEST_PLAN.md
+- Market validation plan: QATAR_VALIDATION_PACKAGE.md
