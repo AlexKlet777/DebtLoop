@@ -26,6 +26,40 @@ def save_debts():
     with open(DEBTS_FILE, "w") as f:
         json.dump(debts, f, ensure_ascii=False, indent=2)
 
+
+def find_debt_cycle(active_debts):
+    graph = {}
+
+    for debt in active_debts:
+        graph.setdefault(debt["from"], []).append(debt)
+
+    def search(current, path_nodes, path_debts):
+        for debt in graph.get(current, []):
+            next_user = debt["to"]
+
+            if next_user in path_nodes:
+                cycle_start = path_nodes.index(next_user)
+                return path_debts[cycle_start:] + [debt]
+
+            if len(path_nodes) < len(graph) + 1:
+                result = search(
+                    next_user,
+                    path_nodes + [next_user],
+                    path_debts + [debt]
+                )
+
+                if result:
+                    return result
+
+        return None
+
+    for start_user in graph:
+        result = search(start_user, [start_user], [])
+        if result:
+            return result
+
+    return None
+
 def get_user_name(user):
     return user.username if user.username else f"{user.first_name}"
 
@@ -37,6 +71,7 @@ def send_welcome(message):
         types.KeyboardButton("/owe"),
         types.KeyboardButton("/debts"),
         types.KeyboardButton("/credits"),
+        types.KeyboardButton("/netting"),
         types.KeyboardButton("/help")
     )
     bot.send_message(message.chat.id, "Привет! Я бот для учёта долгов. Используй кнопки ниже или команды.", reply_markup=markup)
@@ -52,6 +87,7 @@ def show_help(message):
 /paid долг_ID — отметить долг как оплаченный
 /debts — список долгов, которые ты должен
 /credits — список долгов, которые должны тебе
+/netting — найти круговой долг и рассчитать взаимозачёт
 /help — показать это сообщение
 """
     bot.send_message(message.chat.id, help_text)
@@ -139,6 +175,49 @@ def mark_as_paid(message):
             return
 
     bot.send_message(message.chat.id, "Такой подтверждённый долг не найден.")
+
+
+@bot.message_handler(commands=["netting"])
+def show_netting_opportunity(message):
+    active_debts = [
+        d for d in debts
+        if d["status"] == "confirmed"
+    ]
+
+    cycle = find_debt_cycle(active_debts)
+
+    if not cycle:
+        bot.send_message(
+            message.chat.id,
+            "No circular debt found."
+        )
+        return
+
+    netting_amount = min(d["amount"] for d in cycle)
+
+    total_before = sum(d["amount"] for d in cycle)
+    total_after = total_before - netting_amount * len(cycle)
+
+    msg = "🔄 Circular debt detected\n\n"
+
+    msg += "BEFORE NETTING:\n"
+    for d in cycle:
+        msg += f'{d["from"]} → {d["to"]}: ${d["amount"]:,}\n'
+
+    msg += f"\nMaximum netting per link: ${netting_amount:,}\n\n"
+
+    msg += "AFTER NETTING:\n"
+    for d in cycle:
+        remaining = d["amount"] - netting_amount
+        msg += f'{d["from"]} → {d["to"]}: ${remaining:,}\n'
+
+    msg += (
+        f"\nGross obligations before: ${total_before:,}"
+        f"\nGross obligations after: ${total_after:,}"
+        f"\nDebt eliminated: ${total_before - total_after:,}"
+    )
+
+    bot.send_message(message.chat.id, msg)
 
 @bot.message_handler(commands=["debts"])
 def list_debts(message):
