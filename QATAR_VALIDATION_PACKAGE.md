@@ -46,20 +46,33 @@ Start with one segment where circular receivables/payables are plausible:
 
 The objective of interviews is not to sell the product. It is to test whether the problem is frequent, costly, measurable, and important enough to pay for.
 
-## Interview script
+## Interview script — 5-minute version
 
-Use the same questions in every interview so results can be compared.
+Use the same short questions in every interview so results can be compared. A written reply, voice note, or short call is acceptable. A recorded Zoom is not required.
 
-1. Does your company regularly have both accounts receivable and accounts payable at the same time?
-2. Roughly how large are those balances in a typical month?
-3. How often do late incoming payments delay your own outgoing payments?
-4. Do you currently use bilateral set-off / netting with counterparties?
-5. Have you ever tried to identify multi-company chains where several obligations could be offset together?
-6. What is the biggest obstacle: legal approval, counterparty coordination, accounting, data availability, trust, or something else?
-7. If software automatically identified a valid circular-netting opportunity, who inside your company would approve it?
-8. What evidence or documentation would you require before approving a netting proposal?
-9. Would you test this in a controlled pilot using a limited set of counterparties?
-10. If a pilot reduced gross outstanding obligations or shortened settlement time, what pricing model would be easier to accept: subscription, success fee, enterprise/API fee, or another model?
+1. Does your company regularly have both receivables and payables at the same time?
+2. Do late incoming payments ever delay your own outgoing payments or create working-capital pressure?
+3. Do you currently use set-off / netting with counterparties? If yes, is it only bilateral or do you ever coordinate several companies?
+4. If software automatically found a valid multi-company debt circle and showed the exact before/after result, would that be useful enough to test?
+5. What would stop you from using it: legal/accounting approval, trust, data integration, counterparty consent, or something else?
+6. If the pilot worked, which pricing model would feel more natural: subscription, success fee, enterprise/API fee, or another model?
+
+Optional closing question:
+
+7. Would you be willing to confirm in writing that you would consider a pilot if the legal/accounting conditions are acceptable?
+
+### Acceptable evidence formats
+
+Any of the following is useful:
+
+- written reply in Telegram / WhatsApp / email;
+- voice message, with a written summary saved afterward;
+- 5-minute phone / Zoom call with notes;
+- short non-binding pilot-interest confirmation / LOI.
+
+Recording a call is optional. Do not record without the participant's knowledge and consent.
+
+For application evidence, written confirmation is usually more useful than a long video call because it is easy to archive, quote in aggregate, and attach to a validation log.
 
 ## Interview evidence log
 
@@ -81,7 +94,7 @@ Do not publish confidential interview details in the public repository. Keep ide
 
 Recommended internal threshold:
 
-- 5 completed interviews minimum;
+- 5 completed short interviews / written responses minimum;
 - at least 3 respondents confirm that delayed receivables materially affect outgoing payments or working capital;
 - at least 2 respondents agree the concept is worth piloting;
 - at least 2 written expressions of interest / LOIs;
